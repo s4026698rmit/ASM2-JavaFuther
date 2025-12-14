@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.groupX.ems.view_controllers.MainDashboardController"
+            stylesheets="@../css/styles.css">
+
+    <!-- TOP: Title + Auth actions -->
+    <top>
+        <HBox spacing="12.0">
+            <padding>
+                <Insets top="10.0" right="10.0" bottom="10.0" left="10.0"/>
+            </padding>
+            <children>
+                <Label text="Event Management System"
+                       styleClass="title-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="currentRoleLabel"
+                       text="Role: Anonymous"
+                       styleClass="status-label"/>
+                <Button fx:id="loginButton"
+                        text="Login"
+                        onAction="#onLoginClicked"/>
+                <Button fx:id="registerButton"
+                        text="Register"
+                        onAction="#onRegisterClicked"/>
+            </children>
+        </HBox>
+    </top>
+
+    <!-- LEFT: Filters for Anonymous Visitor -->
+    <left>
+        <VBox spacing="10.0">
+            <padding>
+                <Insets top="10.0" right="10.0" bottom="10.0" left="10.0"/>
+            </padding>
+
+            <children>
+                <TitledPane text="Filter Events" expanded="true">
+                    <content>
+                        <VBox spacing="8.0">
+                            <padding>
+                                <Insets top="10.0" right="10.0" bottom="10.0" left="10.0"/>
+                            </padding>
+                            <children>
+                                <!-- Event Type -->
+                                <Label text="Event Type"/>
+                                <ComboBox fx:id="eventTypeComboBox"
+                                          promptText="All types"/>
+
+                                <!-- Date range -->
+                                <Label text="Start Date"/>
+                                <DatePicker fx:id="startDatePicker"/>
+
+                                <Label text="End Date"/>
+                                <DatePicker fx:id="endDatePicker"/>
+
+                                <!-- Location -->
+                                <Label text="Location"/>
+                                <TextField fx:id="locationTextField"
+                                           promptText="City / Venue"/>
+
+                                <!-- Availability -->
+                                <CheckBox fx:id="onlyAvailableCheckBox"
+                                          text="Only show events with available seats"/>
+
+                                <!-- Buttons -->
+                                <HBox spacing="8.0">
+                                    <children>
+                                        <Button fx:id="applyFiltersButton"
+                                                text="Apply"
+                                                onAction="#onApplyFilters"/>
+                                        <Button fx:id="clearFiltersButton"
+                                                text="Clear"
+                                                onAction="#onClearFilters"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </content>
+                </TitledPane>
+
+                <Label wrapText="true"
+                       text="You are currently browsing as an anonymous visitor. You can view events and presenter profiles, but you must login to register for sessions."/>
+            </children>
+        </VBox>
+    </left>
+
+    <!-- CENTER: Events list -->
+    <center>
+        <VBox spacing="8.0">
+            <padding>
+                <Insets top="10.0" right="10.0" bottom="10.0" left="0.0"/>
+            </padding>
+
+            <children>
+                <Label text="Available Events" styleClass="section-label"/>
+
+                <TableView fx:id="eventsTable" prefHeight="400.0">
+                    <columns>
+                        <TableColumn fx:id="nameColumn"
+                                     text="Name"
+                                     prefWidth="180.0"/>
+                        <TableColumn fx:id="typeColumn"
+                                     text="Type"
+                                     prefWidth="100.0"/>
+                        <TableColumn fx:id="dateColumn"
+                                     text="Date / Range"
+                                     prefWidth="150.0"/>
+                        <TableColumn fx:id="locationColumn"
+                                     text="Location"
+                                     prefWidth="140.0"/>
+                        <TableColumn fx:id="statusColumn"
+                                     text="Status"
+                                     prefWidth="100.0"/>
+                        <TableColumn fx:id="availabilityColumn"
+                                     text="Availability"
+                                     prefWidth="120.0"/>
+                    </columns>
+                </TableView>
+
+                <HBox spacing="8.0">
+                    <children>
+                        <Label text="Selected event:"/>
+                        <Label fx:id="selectedEventLabel"
+                               text="None"
+                               styleClass="emphasis-label"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </center>
+
+    <!-- RIGHT: Presenter public info for selected event -->
+    <right>
+        <VBox spacing="10.0">
+            <padding>
+                <Insets top="10.0" right="10.0" bottom="10.0" left="10.0"/>
+            </padding>
+
+            <children>
+                <TitledPane text="Presenters (Public Info)" expanded="true">
+                    <content>
+                        <VBox spacing="8.0">
+                            <padding>
+                                <Insets top="10.0" right="10.0" bottom="10.0" left="10.0"/>
+                            </padding>
+                            <children>
+                                <Label text="Presenters for selected event/session:"
+                                       wrapText="true"/>
+
+                                <ListView fx:id="presenterListView"
+                                          prefWidth="220.0"
+                                          prefHeight="260.0"/>
+
+                                <Label text="Only name and expertise are visible to visitors. Contact details are hidden."
+                                       wrapText="true"
+                                       styleClass="hint-label"/>
+                            </children>
+                        </VBox>
+                    </content>
+                </TitledPane>
+            </children>
+        </VBox>
+    </right>
+
+    <!-- BOTTOM: Status bar -->
+    <bottom>
+        <HBox>
+            <padding>
+                <Insets top="8.0" right="8.0" bottom="8.0" left="8.0"/>
+            </padding>
+            <children>
+                <Label fx:id="statusLabel"
+                       text="Ready"
+                       styleClass="status-label"/>
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>

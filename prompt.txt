@@ -1,0 +1,246 @@
+Here’s a ready-to-use prompt for Cursor to create/refactor MainDashboardController so it becomes your main anonymous visitor screen that can also navigate to Login and Register.
+
+You can paste this into Cursor when VisitorDashboardController.java (or the new MainDashboardController.java) is open.
+
+⸻
+
+
+You are an expert Java + JavaFX + PostgreSQL engineer.
+
+I am building an Event Management System (EMS) for COSC2440.
+
+Goal now:
+Refactor my old VisitorDashboardController into a new **MainDashboardController** that will act as the MAIN landing screen for ANONYMOUS visitors. This screen uses `main_dashboard.fxml` and must:
+
+- Show events for anonymous visitors (list + filters).
+- Show public-only presenter info.
+- Provide buttons for Login and Register that navigate to other FXML screens.
+- Show the current role in a label (starts as “Anonymous”).
+
+==================================================
+1. FILE + PACKAGE
+==================================================
+
+Target file:
+
+`src/main/java/com/groupX/ems/viewcontrollers/MainDashboardController.java`
+
+- Package must be:
+
+```java
+package com.groupX.ems.viewcontrollers;
+
+/**
+ * @author 13
+ */
+
+	•	If there is an old VisitorDashboardController, refactor/rename that logic into this new class. Remove or update the old one so it’s no longer used.
+	•	This controller MUST match the FXML:
+
+src/main/resources/views/main_dashboard.fxml
+
+with:
+
+fx:controller="com.groupX.ems.viewcontrollers.MainDashboardController"
+
+==================================================
+2. FXML FIELDS TO WIRE
+
+Wire these @FXML fields exactly as in main_dashboard.fxml (create them if missing):
+
+TOP BAR:
+	•	Label currentRoleLabel
+	•	Button loginButton
+	•	Button registerButton
+
+FILTER PANEL (left side):
+	•	ComboBox<String> eventTypeComboBox
+	•	DatePicker startDatePicker
+	•	DatePicker endDatePicker
+	•	TextField locationTextField
+	•	CheckBox onlyAvailableCheckBox
+	•	Button applyFiltersButton
+	•	Button clearFiltersButton
+
+CENTER TABLE (events):
+	•	TableView<EventViewModel> eventsTable
+	•	TableColumn<EventViewModel, String> nameColumn
+	•	TableColumn<EventViewModel, String> typeColumn
+	•	TableColumn<EventViewModel, String> dateColumn
+	•	TableColumn<EventViewModel, String> locationColumn
+	•	TableColumn<EventViewModel, String> statusColumn
+	•	TableColumn<EventViewModel, String> availabilityColumn
+	•	Label selectedEventLabel
+
+RIGHT SIDE (presenters):
+	•	ListView<String> presenterListView
+
+BOTTOM:
+	•	Label statusLabel
+
+EventViewModel is under com.groupX.ems.view_models.EventViewModel.
+
+If EventViewModel is empty right now, add the minimum properties needed:
+	•	id (long)
+	•	name (String)
+	•	type (String)
+	•	dateRange (String)
+	•	location (String)
+	•	status (String)
+	•	availabilityText (String)  // e.g. “10 / 100 seats left”
+
+Use JavaFX SimpleStringProperty where appropriate so TableView works smoothly.
+
+==================================================
+3. DEPENDENCIES & SERVICES
+
+MainDashboardController should use:
+	•	com.groupX.ems.services.EventService to load/filter events.
+	•	com.groupX.ems.services.PresenterService OR
+PresenterSessionRepository + SessionRepository to fetch presenters for a given event/session.
+	•	com.groupX.ems.utils.LocalStorageUtil to read current user role.
+
+If EventService and PresenterService are currently interfaces with no implementation, you can assume these concrete classes exist and inject them in a simple way:
+	•	Either create them directly in the controller (simple for assignment), or
+	•	Use a simple AppConfig class if already present.
+
+For now, implement the simplest working approach, e.g.:
+
+private final EventService eventService = new EventServiceImpl();
+private final PresenterService presenterService = new PresenterServiceImpl();
+
+(Adjust names to match existing service implementations.)
+
+==================================================
+4. INITIALIZATION LOGIC
+
+Implement @FXML public void initialize():
+	1.	Set up the table columns:
+
+	•	nameColumn → EventViewModel.name
+	•	typeColumn → EventViewModel.type
+	•	dateColumn → EventViewModel.dateRange
+	•	locationColumn → EventViewModel.location
+	•	statusColumn → EventViewModel.status
+	•	availabilityColumn → EventViewModel.availabilityText
+
+Use cellValueFactory lambdas or PropertyValueFactory so they map correctly.
+	2.	Load event types into eventTypeComboBox:
+
+	•	Items: “All types”, “CONFERENCE”, “WORKSHOP”, “CONCERT”, “EXHIBITION”, “OTHER”
+	•	Default selection: “All types” or null with promptText.
+
+	3.	Set currentRoleLabel based on LocalStorageUtil:
+
+	•	If no current user → set text to "Role: Anonymous".
+	•	(Later, when user logs in and comes back, you can update this label to the real role.)
+
+	4.	Load initial events:
+
+	•	Call eventService.getAllPublicEvents() or similar and convert them to ObservableList<EventViewModel>.
+	•	Show them in eventsTable.
+	•	Set statusLabel to something like "Loaded X events".
+
+	5.	Add selection listener on eventsTable:
+
+	•	When the selected event changes:
+	•	Update selectedEventLabel to show event name.
+	•	Load presenters for that event (public info only) and show in presenterListView.
+
+For presenters, show strings like "Dr. Alice Pham — AI & Data Science" (no email or phone).
+
+==================================================
+5. FILTER HANDLERS
+
+Implement methods used by FXML:
+
+@FXML
+private void onApplyFilters(ActionEvent event) { ... }
+
+@FXML
+private void onClearFilters(ActionEvent event) { ... }
+
+Behaviour:
+	•	onApplyFilters:
+	•	Read values from:
+	•	eventTypeComboBox (may be null or “All types”)
+	•	startDatePicker and endDatePicker (may be null)
+	•	locationTextField (may be empty)
+	•	onlyAvailableCheckBox
+	•	Construct a simple filter DTO or parameters.
+	•	Call a method on EventService, for example:
+	•	eventService.findPublicEvents(eventType, startDate, endDate, location, onlyAvailable)
+	•	Map results to EventViewModel list and set on eventsTable.
+	•	Update statusLabel with how many events found.
+	•	onClearFilters:
+	•	Set eventTypeComboBox.getSelectionModel().clearSelection()
+	•	startDatePicker.setValue(null)
+	•	endDatePicker.setValue(null)
+	•	locationTextField.clear()
+	•	onlyAvailableCheckBox.setSelected(false)
+	•	Reload all events via eventService.getAllPublicEvents()
+	•	Reset statusLabel to “Filters cleared” or “Loaded X events”.
+
+If EventService doesn’t yet have these methods, create them with appropriate signatures and stub implementations that at least compile.
+
+==================================================
+6. LOGIN / REGISTER NAVIGATION
+
+Implement methods used by buttons in FXML:
+
+@FXML
+private void onLoginClicked(ActionEvent event) { ... }
+
+@FXML
+private void onRegisterClicked(ActionEvent event) { ... }
+
+These should switch the scene to:
+	•	Login: "/views/login.fxml"
+	•	Register: "/views/register.fxml"
+
+Assume that there is a helper in MainApp to switch scenes, something like:
+
+public class MainApp extends Application {
+    public static void switchScene(String fxmlPath) { ... }
+}
+
+Use that method (or create an equivalent static helper), e.g.:
+
+MainApp.switchScene("/views/login.fxml");
+MainApp.switchScene("/views/register.fxml");
+
+Do not implement business logic here; this controller is just UI + calls to services.
+
+==================================================
+7. STATUS & ROLE LABEL UPDATES
+	•	statusLabel:
+	•	Use this to show short messages: “Loaded 10 events”, “No events found”, “Failed to load events”, etc.
+	•	currentRoleLabel:
+	•	On initialize:
+	•	Fetch current user from LocalStorageUtil.getCurrentRoleOrAnonymous().
+	•	If anonymous → "Role: Anonymous".
+	•	If not anonymous → "Role: <ROLE_NAME>".
+
+Even though this screen is mostly for anonymous visitors, it may be reused after a user logs in and navigates back, so keep it flexible.
+
+==================================================
+8. ERROR HANDLING
+	•	Wrap DB calls in try/catch.
+	•	On exception:
+	•	Log the error with SLF4J logger (create one at top of controller).
+	•	Set statusLabel to something like "Error loading events".
+
+Don’t crash the app on exceptions.
+
+==================================================
+9. FINAL EXPECTATION
+
+Update/implement MainDashboardController so that:
+	•	It compiles and matches main_dashboard.fxml.
+	•	It uses EventService and presenter-related repos/services to load data.
+	•	It uses LocalStorageUtil for the current role label.
+	•	It provides working handlers: onLoginClicked, onRegisterClicked, onApplyFilters, onClearFilters.
+	•	It shows events & presenters for anonymous visitors and lets them navigate to login/register.
+
+Please directly modify the controller file and any minimal related classes (EventViewModel, EventService, MainApp.switchScene helper) so that everything compiles. Do not write explanations, just update the code in the workspace.
+
